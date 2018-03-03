@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2016-05-25 19:32:29">
+<sys_ui_action action="INSERT_OR_UPDATE">
+<action_name/>
+<active>true</active>
+<client>false</client>
+<comments/>
+<condition>current.canCreate()</condition>
+<form_action>true</form_action>
+<form_button>true</form_button>
+<form_context_menu>false</form_context_menu>
+<form_link>false</form_link>
+<hint/>
+<keyboard_shortcut/>
+<list_action>false</list_action>
+<list_banner_button>false</list_banner_button>
+<list_button>false</list_button>
+<list_choice>false</list_choice>
+<list_context_menu>false</list_context_menu>
+<list_link>false</list_link>
+<list_save_with_form_button>false</list_save_with_form_button>
+<name>Copy Page</name>
+<onclick/>
+<order>100</order>
+<script><![CDATA[copySPPage();
+
+function copySPPage() {
+	var oldID = current.getUniqueValue();
+	current.title = "Copy of " + current.title;
+	current.id = "copy_of_" + current.id;
+	var newID = current.insert();
+	action.setRedirectURL(current);
+	copyContainers(oldID, newID);
+}
+
+function copyContainers(oldPageID, newPageID) {
+	var contGR = new GlideRecord("sp_container");
+	contGR.addQuery("sp_page", oldPageID);
+	contGR.query();
+	while (contGR.next()) {
+		var oldContID = contGR.getUniqueValue();
+		contGR.sp_page = newPageID;
+		var newContID = contGR.insert();
+		copyRows(oldContID, newContID, "sp_container");
+	}
+}
+
+function copyRows(oldContID, newContID, field) {
+	var rowGR = new GlideRecord("sp_row");
+	rowGR.addQuery(field, oldContID);
+	rowGR.query();
+	while (rowGR.next()) {
+		var oldRowID = rowGR.getUniqueValue();
+		rowGR.setValue(field, newContID);
+		var newRowID = rowGR.insert();
+		copyColumns(oldRowID, newRowID);
+	}
+}
+
+function copyColumns(oldRowID, newRowID) {
+	var colGR = new GlideRecord("sp_column");
+	colGR.addQuery("sp_row", oldRowID);
+	colGR.query();
+	while (colGR.next()) {
+		var oldColID = colGR.getUniqueValue();
+		colGR.sp_row = newRowID;
+		var newColID = colGR.insert();
+		copyInstances(oldColID, newColID);
+		copyRows(oldColID, newColID, "sp_column");
+	}
+}
+
+function copyInstances(oldColID, newColID) {
+	var rectGR = new GlideRecord("sp_instance");
+	rectGR.addQuery("sp_column", oldColID);
+	rectGR.query();
+	while (rectGR.next()) {
+		var realRectGR = GlideScriptRecordUtil.get(rectGR).getRealRecord();
+		var oldRectID = realRectGR.getUniqueValue();
+		realRectGR.sp_column = newColID;
+		var newRectID = realRectGR.insert();
+	}
+}]]></script>
+<show_insert>true</show_insert>
+<show_multiple_update>false</show_multiple_update>
+<show_query>false</show_query>
+<show_update>true</show_update>
+<sys_class_name>sys_ui_action</sys_class_name>
+<sys_created_by>admin</sys_created_by>
+<sys_created_on>2015-12-22 19:27:05</sys_created_on>
+<sys_customer_update>false</sys_customer_update>
+<sys_domain>global</sys_domain>
+<sys_domain_path>/</sys_domain_path>
+<sys_id>8312d4f0d7201200a9addd173e24d4db</sys_id>
+<sys_mod_count>8</sys_mod_count>
+<sys_name>Copy Page</sys_name>
+<sys_overrides display_value=""/>
+<sys_package display_value="Service Portal - Core">14180b23d7321200a9addd173e24d476</sys_package>
+<sys_policy/>
+<sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+<sys_scope display_value="Global">global</sys_scope>
+<sys_update_name>sys_ui_action_8312d4f0d7201200a9addd173e24d4db</sys_update_name>
+<sys_updated_by>admin</sys_updated_by>
+<sys_updated_on>2016-05-25 19:30:41</sys_updated_on>
+<table>sp_page</table>
+<ui11_compatible>true</ui11_compatible>
+<ui16_compatible>false</ui16_compatible>
+</sys_ui_action>
+</unload>

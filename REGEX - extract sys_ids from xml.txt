@@ -1,0 +1,2 @@
+Regex expression to find only the sys_ids in some XML
+^(?!<sys_id>[\s\S]*?<\/sys_id>).*\r?\n?

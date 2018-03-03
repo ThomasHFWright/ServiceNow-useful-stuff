@@ -1,0 +1,42 @@
+function onLoad() {
+   //Type appropriate comment here, and begin script below
+	startUp();
+
+	while(g_form.getValue('startstop')=='start'){
+	setTimeout(function(){alert("hi")}, 1000);
+	}
+   
+}
+
+//getPositon('tick1_10');
+//buildPosition(2,5);
+
+//setTimeout(function(){alert("hi")}, 1000);
+
+/*
+if(g_form.getValue('startstop')=='start'){
+	g_form.setValue('tick1_2','true');
+}
+*/
+
+function startUp(){
+	if(g_form.getValue('startstop')=='stop'){
+		setTimeout(startUp(), 100);
+	}
+	else{
+		alert('started');
+		return;
+	}
+}
+
+function getPositon(input){
+	var xyArray = input.slice(4).split("_");
+	alert(xyArray);
+	return xyArray;
+}
+
+function buildPosition(inputX, inputY){
+	var position = 'tick'+inputX+'_'+inputY;
+	alert(position);
+	return position;
+}

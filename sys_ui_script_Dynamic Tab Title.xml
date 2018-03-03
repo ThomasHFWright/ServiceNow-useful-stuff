@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2014-06-18 11:30:02">
+<sys_ui_script action="INSERT_OR_UPDATE">
+<active>true</active>
+<description/>
+<global>true</global>
+<name>Dynamic Page Title</name>
+<script><![CDATA[window.onload = function() {
+
+	if (window.self == window.top && g_user.userName == "WrightTh"){
+		var myFilename = window.location.pathname.split("/");
+		myFilename = myFilename[myFilename.length-1];
+		myFilename = myFilename.replace('.do', '');
+		var myTitle = '';
+		
+		var myField;
+		var myFields = [
+		myFilename+'.'+'number',              // task records
+		myFilename+'.'+'name',                // scripts etc
+		myFilename+'.'+'short_description',   // other
+		myFilename+'_'+'title'                // homepages
+		];
+		for (var i=0; i<myFields.length; i++) {
+			myField = document.getElementById(myFields[i]);
+			if (myField) {
+				if (i == 0) {
+					myTitle = myField.value;
+				} else {
+					myTitle = myField.value + ' - ' + u_getPageType(myFilename);
+				}
+				break;
+			}
+		}
+		if (myTitle == '') {
+		myTitle = u_getPageType(myFilename);
+	}
+		if(myTitle!="Navpage"&&myTitle!=""){
+			document.title = myTitle;
+		}
+	
+	}
+	
+};
+function u_getPageType(filename) {
+	if (filename.indexOf('sys_') == 0) {
+		filename = filename.replace('sys_', '');
+	}
+        if (filename.indexOf('system_') == 0) {
+		filename = filename.replace('system_', '');
+	}
+	if (filename.indexOf('u_') == 0) {
+		filename = filename.replace('u_', '');
+	}
+	filename = filename.replace(/_/g,' ');
+	filename = filename.trim();
+	filename = filename.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+	
+	filename = filename.replace(/^Ui/g,'UI');
+	
+	return filename;
+}]]></script>
+<sys_created_by>WrightTh</sys_created_by>
+<sys_created_on>2014-04-19 15:20:08</sys_created_on>
+<sys_id>2a9ceb2ff504e1000fa99ea355b7e6e3</sys_id>
+<sys_mod_count>30</sys_mod_count>
+<sys_updated_by>WrightTh</sys_updated_by>
+<sys_updated_on>2014-06-18 11:26:24</sys_updated_on>
+</sys_ui_script>
+</unload>

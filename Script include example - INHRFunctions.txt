@@ -1,0 +1,209 @@
+var INHRFunctions = Class.create();
+INHRFunctions.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+	
+	/*_________________________________________________________________
+	   * Description: Used in reference qualifiers
+	   * Parameters: groupMember - Gliderecord of the the user who is a member of the groups
+	   * Returns: Returns a list of groups for the group member
+	   ________________________________________________________________*/
+	returnAssignmentGroups: function(groupMember){
+		var gp = ' ';
+		//return everything if the groupMember value is empty
+		if(!groupMember)
+			return;
+
+		//sys_user_grmember has the user to group relationship
+		var grp = new GlideRecord('sys_user_grmember');
+		grp.addQuery('user',groupMember);
+		grp.query();
+		while(grp.next()) {
+			if (gp.length > 0) {
+				//build a comma separated string of groups if there is more than one
+				gp += (',' + grp.group);
+			}
+			else {
+				gp = grp.group;
+			}
+		}
+		// return Groups where assigned to is in those groups we use IN for lists
+		return 'sys_idIN' + gp;
+	},
+	
+	/*_________________________________________________________________
+	   * Description: Used in reference qualifiers
+	   * Parameters: deptMember - Gliderecord of the user who is a member of the department
+	   * Returns: Returns the department of a user
+	   ________________________________________________________________*/
+	returnDepartments: function(deptMember){
+		//return everything if the user has no department
+		if(!deptMember.department)
+			return;
+		return 'sys_idIN' + deptMember.department;
+	},
+	
+	/*_________________________________________________________________
+	   * Description: AJAX function used to fill the department field of a form automatically when the user is supplied
+	   * Parameters: deptMember - the sys_id of the user we want the department of
+	   * Returns: the department sys_id
+	   ________________________________________________________________*/
+	ajaxReturnUserDepartment: function(){
+		
+		var deptMember = this.getParameter("deptMember");
+		if(deptMember){
+			var gr = new GlideRecord('sys_user');
+			gr.get(deptMember);
+			if(gr.department){
+				return gr.department;
+			}
+		}
+		return;
+	},
+	
+	/*_________________________________________________________________
+	 * Description: Returns true if the current user has one of the input roles
+	 * Parameters: rolesNeeded - comma separated list of roles
+	 * Returns: true if the user has one of the roles in rolesNeeded, false otherwise
+	________________________________________________________________*/
+	hasRoleExactly: function(rolesNeeded) {
+		var roles = gs.getSession().getRoles().split(',');
+		
+		rolesNeeded = rolesNeeded.split(',');
+		
+		for (i = 0; i < rolesNeeded.length; i++) { 
+			for (j = 0; j < roles.length; j++) { 
+				if(''+roles[j] == ''+rolesNeeded[i]){
+					return true;
+				}
+			}
+		}
+		return false;
+	},
+	
+	/*_________________________________________________________________
+	   * Description: AJAX function used to return the user's Geography sys_id. Used for knowledge search on short description
+	   * Parameters: user - the sys_id of the user we want the geography of
+	   * Returns: the geography sys_id of the user
+	   ________________________________________________________________*/
+	ajaxReturnUserGeography: function(){
+		
+		var user = this.getParameter("user");
+		if(user){
+			var grUsr = new GlideRecord('sys_user');
+			grUsr.get(user);
+			if(grUsr.u_geography_code){
+				var grGeo = new GlideRecord('u_geography');
+				grGeo.addQuery('u_geography',grUsr.u_geography_code);
+				grGeo.query();
+				if(grGeo.next()){
+					return grGeo.sys_id;
+				}
+			}
+		}
+		return;
+	},
+	
+	/*_________________________________________________________________
+	   * Description: Returns an HTML list of Knowledge URLs which have been associated with a case
+	   * Parameters: caseID - the sys_id of the case in question
+	   * Returns: HTML links to URLs
+	   ________________________________________________________________*/
+	returnKnowledgeURLs: function(caseID){
+		var urlHTML = '';
+		var kbSol = new GlideRecord('task_rel_kb');
+		kbSol.addQuery('parent',caseID);
+		kbSol.addQuery('child','!=','');
+		kbSol.query();
+		while(kbSol.next()){
+			var kURL = new GlideRecord('u_knowledge_url');
+			kURL.addQuery('u_knowledge_article',kbSol.child.sys_id);
+			kURL.orderBy('u_order');
+			kURL.query();
+			while(kURL.next()){
+				if(urlHTML){urlHTML += '<br>';}
+				urlHTML += '<a target="_blank" href="'+kURL.u_url+'">'+kURL.u_display_text+'</a>'
+			}
+		}
+		return urlHTML;
+	},
+	
+	/*_________________________________________________________________
+	   * Description: Used by notifications
+	   * Parameters: caseID - the sys_id of the case in question
+	   * Returns: Returns a string containing the reply To address for the current case
+	   ________________________________________________________________*/
+	returnEmailReply: function(caseID){
+		//For phase 2 this function will be modified to get the address based on the assignment group, or some other method
+		var replyTo = gs.getProperty('glide.email.hr.replyto');
+		var name = gs.getProperty('glide.email.hr.username');
+		return name+' <'+replyTo+'>';
+	},
+	
+	/*_________________________________________________________________
+	   * Description: Used to modify the canRead function for use with database views which have different attribute names to normal tables.
+	   * Parameters: currentObj - the current object, be it a u_hr_case_enquiry record or u_hr_case_sla record
+	   * Returns: Returns true or false based on hr_factory canRead function 
+	   ________________________________________________________________*/
+	canRead: function(currentObj, gsObj){
+		if(currentObj.getTableName() != 'u_hr_case_enquiry'){
+			var gr = new GlideRecord('u_hr_case_enquiry');
+			gr.get(currentObj.hrcase_sys_id);
+			return hr_Factory.getSecurityManager(gr, gsObj).canRead();
+		}
+		else{
+			return hr_Factory.getSecurityManager(currentObj, gsObj).canRead();
+		}
+	},
+	
+	/*_________________________________________________________________
+	   * Description: Used by Scheduled job to update active SLAs for hr cases every few minutes
+	   * Parameters: None
+	   * Returns: None
+	   ________________________________________________________________*/
+	updateHRSLAs: function(){
+		var gr = new GlideRecord('task_sla');
+		gr.addQuery('stage','in_progress');
+		gr.addQuery('task.sys_class_name','CONTAINS','hr_case');
+		gr.query();
+		while(gr.next()){
+			this._runSLACalculation(gr);
+		}
+	},
+	
+	_runSLACalculation: function(SLA) {
+	   //If the SLA has already ended, set now to the end time so the calculation doesn't get messed up
+	   if (!SLA.end_time.nil())
+		  SLACalculatorNG.calculateSLA(SLA, /* skipUpdate */ false, SLA.end_time);
+	   else
+		  SLACalculatorNG.calculateSLA(SLA, /* skupUpdate */ false);
+	},
+	
+	/*_________________________________________________________________
+	   * Description: Used by ACLs on the sys_user_group and sys_user_grmember tables to allow access
+	   * Parameters: group name
+	   * Returns: true if the group name starts with "HR ", false otherwise
+	   ________________________________________________________________*/
+	groupNameAccess: function(groupName){
+		return groupName.slice(0,2).toLowerCase() == 'hr';
+	},
+	
+	/*_________________________________________________________________
+	   * Description: Used by Notifications to find the user an email was sent from
+	   * Parameters: email - email address of user to find
+	   * Returns: sys_id of user record
+	   ________________________________________________________________*/
+	returnUserFromEmail: function(email){
+		var gr = new GlideRecord('sys_user');
+		gr.addQuery('email',email);
+		gr.addEncodedQuery('u_emp_statusINA,T'); //Employee Status is A or T
+		gr.orderByDesc('phone');
+		gr.orderByDesc('first_name');
+		gr.oderByDesc('last_name');
+		gr.setLimit(1);
+		gr.query();
+		if(gr.next()){
+			return gr.sys_id;	
+		}
+		return false;
+	},
+    type: 'INHRFunctions'
+});

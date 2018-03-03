@@ -1,0 +1,10 @@
+sn_cmdbgroup.CMDBGroupAPI.getManualCIList(groupId, requireCompleteSet);
+sn_cmdbgroup.CMDBGroupAPI.getSavedQueryIdList(groupId, requireCompleteSet);
+sn_cmdbgroup.CMDBGroupAPI.getAllCIFromQueryBuilder(groupId, requireCompleteSet);
+sn_cmdbgroup.CMDBGroupAPI.getAllCI(groupId, requireCompleteSet);
+//requireCompleteSet flag requires API returns either all of list or nothing after applying ACL
+//returns error if some not visible due to security
+
+sn_cmdbgroup.CMDBGroupAPI.setManualCIList(groupId, manualCIList);
+sn_cmdbgroup.CMDBGroupAPI.setSavedQueryIdList(groupId, queryIdList);
+//both of these override the existing list

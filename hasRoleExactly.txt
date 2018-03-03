@@ -1,0 +1,19 @@
+/*_________________________________________________________________
+ * Description: Returns true if the current user has one of the input roles
+ * Parameters: rolesNeeded - comma separated list of roles
+ * Returns: true if the user has one of the roles in rolesNeeded, false otherwise
+  ________________________________________________________________*/
+hasRoleExactly: function(rolesNeeded) {
+	var roles = gs.getSession().getRoles().split(',');
+
+	rolesNeeded = rolesNeeded.split(',');
+
+	for (i = 0; i < rolesNeeded.length; i++) { 
+		for (j = 0; j < roles.length; j++) { 
+			if(''+roles[j] == ''+rolesNeeded[i]){
+				return true;
+			}
+		}
+	}
+	return false;
+},

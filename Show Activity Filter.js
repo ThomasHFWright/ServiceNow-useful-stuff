@@ -1,0 +1,1 @@
+ActivityFilter.toggleActivity(true,g_form.getTableName(),g_form.getUniqueValue());

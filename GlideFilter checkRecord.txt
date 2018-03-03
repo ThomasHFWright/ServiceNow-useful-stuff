@@ -1,0 +1,2 @@
+// Details on GlideFilter https://community.servicenow.com/community/develop/blog/2016/11/16/glidefilter-and-regular-expression-match
+GlideFilter.checkRecord(current, 'myfilter')

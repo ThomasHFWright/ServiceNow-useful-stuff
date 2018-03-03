@@ -1,0 +1,31 @@
+function onChange(control, oldValue, newValue, isLoading) {
+	if(newValue == 'true'){
+		var oldX = g_form.getValue('posX');
+		var oldY = g_form.getValue('posY');
+		var newY = parseInt(oldY)-1;
+		//alert(oldX+' '+oldY+' '+newY);
+		
+		var oldTick = buildPosition(oldX.toString(),oldY.toString());
+		//alert(oldTick);
+		
+		g_form.setValue(oldTick,'false');
+		g_form.setValue(buildPosition(oldX.toString(),newY.toString()),'true');
+		//g_form.setValue('posX',oldX);
+		g_form.setValue('posY',newY.toString());
+		g_form.setValue('tickUp','false');
+		
+	}
+
+}
+
+function getPositon(input){
+	var xyArray = input.slice(4).split("_");
+	//alert(xyArray);
+	return xyArray;
+}
+
+function buildPosition(inputX, inputY){
+	var position = 'tick'+inputX+'_'+inputY;
+	//alert(position);
+	return position;
+}

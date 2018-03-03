@@ -1,0 +1,4 @@
+https://demo018.service-now.com/incident_list.do?sysparm_view=&sysparm_filter_only=true&sysparm_filter_pinned=true&sysparm_query=company=86c1f3193790200044e0bfc8bcbe5d95^EQ
+
+syparm_filter_pinned=true opens the filter
+sysparm_filter_only=true opens the list view without running the filter
